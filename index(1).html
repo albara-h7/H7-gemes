@@ -1,0 +1,1078 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>H7 Games</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent;
+      user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  html, body { margin: 0; height: 100%; overflow: hidden;
+    font-family: system-ui, sans-serif; background: #0f172a; color: #fff; }
+
+  /* ---------- القائمة ---------- */
+  #menu { height: 100%; overflow-y: auto; padding: 28px 18px 40px; }
+  #menu h1 { text-align: center; font-size: 38px; margin: 0 0 6px; }
+  #menu .sub { text-align: center; opacity: .7; margin-bottom: 26px; font-size: 17px; }
+  .grid { display: grid; gap: 14px; max-width: 900px; margin: 0 auto;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .card { background: #1e293b; border-radius: 20px; padding: 22px 16px;
+    text-align: center; cursor: pointer; border: 2px solid transparent;
+    transition: transform .1s, border-color .1s; }
+  .card:active { transform: scale(.96); border-color: #38bdf8; }
+  .card .ic { font-size: 56px; }
+  .card .nm { font-size: 24px; font-weight: 800; margin-top: 6px; }
+  .card .ds { font-size: 15px; opacity: .7; margin-top: 6px; line-height: 1.5; }
+  .card .tg { display: inline-block; margin-top: 10px; font-size: 13px;
+    background: #334155; padding: 4px 12px; border-radius: 20px; }
+
+  /* ---------- المسرح ---------- */
+  #stage { display: none; height: 100%; flex-direction: column; }
+  #head { height: 56px; display: flex; align-items: center; gap: 12px;
+    padding: 0 14px; background: #1e293b; flex-shrink: 0; z-index: 20; }
+  #head button { border: 0; background: #334155; color: #fff; font-size: 18px;
+    padding: 8px 16px; border-radius: 12px; cursor: pointer; }
+  #head .t { font-size: 22px; font-weight: 800; }
+  #content { flex: 1; position: relative; min-height: 0; overflow: hidden; }
+
+  .ov { position: absolute; inset: 0; background: rgba(15,23,42,.93); z-index: 15;
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center; padding: 20px; }
+  .ov h2 { font-size: 40px; margin: 0 0 8px; }
+  .ov p { font-size: 20px; opacity: .9; line-height: 1.7; max-width: 440px; margin: 6px 0; }
+  .btn { margin-top: 16px; font-size: 24px; padding: 12px 40px; border: 0;
+    border-radius: 16px; background: #22c55e; color: #fff; font-weight: 800; cursor: pointer; }
+  .btn.gray { background: #64748b; font-size: 17px; padding: 9px 26px; }
+  .center { height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px; padding: 10px; }
+  .bar { display: flex; gap: 30px; font-size: 22px; font-weight: 700; }
+
+  /* ---------- مناطق اللاعبين ---------- */
+  .split { display: flex; flex-direction: column; height: 100%; }
+  .zone { display: flex; align-items: center; justify-content: center;
+    text-align: center; cursor: pointer; touch-action: none; overflow: hidden; min-height: 0; }
+  .zr { background: #ef4444; } .zb { background: #3b82f6; }
+  .rot { transform: rotate(180deg); }
+  .big { font-size: 50px; font-weight: 800; }
+  .sm { font-size: 21px; opacity: .9; margin-top: 4px; }
+  .hud { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    background: #0f172a; border: 3px solid #fff; border-radius: 40px;
+    padding: 5px 22px; font-size: 24px; font-weight: 800; z-index: 5; pointer-events: none; }
+
+  /* ---------- XO ---------- */
+  .xo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: min(78vw, 56vh, 460px); }
+  .xo button { aspect-ratio: 1; font-size: min(14vw, 11vh, 90px); border: 0;
+    border-radius: 18px; background: #1e293b; color: #fff; cursor: pointer; }
+  .xo button.win { background: #16a34a; }
+
+  /* ---------- الذاكرة ---------- */
+  .mem { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: min(88vw, 62vh, 520px); }
+  .mem button { aspect-ratio: 1; font-size: min(10vw, 8vh, 62px); border: 0;
+    border-radius: 16px; background: #475569; color: #fff; cursor: pointer; }
+  .mem button.up { background: #f8fafc; }
+  .mem button.ok { background: #16a34a; }
+
+  /* ---------- الثعبان ---------- */
+  canvas { background: #1e293b; border-radius: 14px; display: block; }
+  .pad { display: grid; grid-template-columns: repeat(3, 62px); gap: 6px; }
+  .pad button { height: 54px; border: 0; border-radius: 12px; background: #334155;
+    color: #fff; font-size: 24px; cursor: pointer; }
+
+  /* ---------- اصطياد ---------- */
+  #arena { position: relative; flex: 1; width: 100%; background: #1e293b;
+    border-radius: 16px; overflow: hidden; touch-action: none; }
+  .target { position: absolute; width: 78px; height: 78px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #fde047, #f59e0b);
+    border: 4px solid #fff; cursor: pointer; font-size: 38px;
+    display: flex; align-items: center; justify-content: center; }
+
+  /* ---------- ألعاب الحفلات ---------- */
+  input { user-select: text; -webkit-user-select: text; }
+  .scr { height: 100%; overflow-y: auto; display: flex; flex-direction: column; padding: 18px; touch-action: pan-y; }
+  .in { margin: auto; width: 100%; max-width: 540px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .in h2 { font-size: 34px; margin: 4px 0; }
+  .in p { font-size: 19px; opacity: .9; line-height: 1.7; margin: 4px 0; }
+  .in .big { font-size: 46px; font-weight: 800; }
+  .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; width: 100%; }
+  .pb { padding: 16px 8px; font-size: 20px; border: 0; border-radius: 14px;
+    background: #334155; color: #fff; font-weight: 700; cursor: pointer; }
+  .pb:active, .pb.sel { background: #2563eb; }
+  .names { width: 100%; }
+  .names input { width: 100%; padding: 11px; font-size: 18px; border-radius: 10px;
+    border: 2px solid #334155; background: #1e293b; color: #fff; margin: 3px 0; }
+  .step { display: flex; align-items: center; justify-content: center; gap: 18px; }
+  .step span { font-size: 44px; font-weight: 800; min-width: 64px; }
+  .step button { width: 58px; height: 58px; font-size: 30px; border: 0;
+    border-radius: 14px; background: #334155; color: #fff; cursor: pointer; }
+  .opt { width: 100%; padding: 26px 14px; font-size: 26px; font-weight: 800; border: 0;
+    border-radius: 20px; color: #fff; cursor: pointer; line-height: 1.5; }
+  .opt.a { background: #2563eb; } .opt.b { background: #dc2626; }
+  .pct { font-size: 20px; margin-top: 6px; min-height: 26px; }
+  .card2 { background: #1e293b; border-radius: 22px; padding: 28px 20px; font-size: 28px;
+    font-weight: 700; line-height: 1.7; width: 100%; min-height: 150px;
+    display: flex; align-items: center; justify-content: center; }
+  .fa { position: absolute; inset: 0; touch-action: none; }
+  .fc { position: absolute; width: 110px; height: 110px; border-radius: 50%;
+    transform: translate(-50%,-50%); border: 5px solid #fff;
+    transition: transform .3s, opacity .3s; pointer-events: none; }
+  .sw { width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .sw button { height: 90px; border: 0; border-radius: 18px; cursor: pointer; }
+  .rps { display: flex; gap: 14px; justify-content: center; }
+  .rps button { font-size: 60px; width: 108px; height: 108px; border: 0;
+    border-radius: 24px; background: #1e293b; cursor: pointer; }
+  .rps button:active { background: #334155; }
+  .card.wide { grid-column: 1 / -1; background: linear-gradient(135deg, #6d28d9, #2563eb); }
+</style>
+</head>
+<body>
+
+<div id="menu">
+  <h1>🎮 H7 Games</h1>
+  <div class="sub">بدون نت · اختر لعبة وابدأ</div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="stage">
+  <div id="head"><button id="backBtn">→ رجوع</button><span class="t" id="title"></span></div>
+  <div id="content"></div>
+</div>
+
+<script>
+/* ============ أدوات مساعدة ============ */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+let timers = [], docEvents = [];
+const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+const every = (fn, ms) => { const t = setInterval(fn, ms); timers.push(t); return t; };
+const onDoc = (type, fn) => { document.addEventListener(type, fn); docEvents.push([type, fn]); };
+function cleanup() {
+  timers.forEach(t => { clearTimeout(t); clearInterval(t); }); timers = [];
+  docEvents.forEach(([t, f]) => document.removeEventListener(t, f)); docEvents = [];
+}
+function showOv(c, html) {
+  let o = c.querySelector(".ov");
+  if (!o) { o = document.createElement("div"); o.className = "ov"; c.appendChild(o); }
+  o.innerHTML = html; o.style.display = "flex"; return o;
+}
+function hideOv(c) { const o = c.querySelector(".ov"); if (o) o.style.display = "none"; }
+function beep(f, d) {
+  try {
+    const ctx = beep.c || (beep.c = new (window.AudioContext || window.webkitAudioContext)());
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.value = f; o.connect(g); g.connect(ctx.destination);
+    g.gain.setValueAtTime(.12, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + d);
+    o.start(); o.stop(ctx.currentTime + d);
+  } catch (e) {}
+}
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/* ============ الألعاب ============ */
+const games = {};
+
+/* ---- 1) شد الحبل ---- */
+games.tug = {
+  name: "شد الحبل", icon: "🪢", tag: "لاعبين", desc: "دق على نصفك بأسرع ما تقدر وكبّر مساحتك!",
+  init(c) {
+    c.innerHTML = `<div class="split">
+      <div class="zone zr" id="z1"><div class="rot"><div class="big">دق! 👆</div><div class="sm">الأحمر</div></div></div>
+      <div class="zone zb" id="z2"><div><div class="big">دق! 👆</div><div class="sm">الأزرق</div></div></div></div>
+      <div class="hud" id="hud"></div>`;
+    const z1 = c.querySelector("#z1"), z2 = c.querySelector("#z2"), hud = c.querySelector("#hud");
+    let pos = 50, playing = false, sc = { r: 0, b: 0 };
+    const draw = () => { z2.style.height = pos + "%"; z1.style.height = (100 - pos) + "%"; };
+    const upd = () => hud.textContent = "🔴 " + sc.r + " - " + sc.b + " 🔵";
+    const tap = w => {
+      if (!playing) return;
+      pos = Math.max(0, Math.min(100, pos + (w === "b" ? 2.2 : -2.2))); draw(); buzz(6);
+      if (pos >= 100) end("b"); else if (pos <= 0) end("r");
+    };
+    z1.addEventListener("pointerdown", e => { e.preventDefault(); tap("r"); });
+    z2.addEventListener("pointerdown", e => { e.preventDefault(); tap("b"); });
+    const end = w => {
+      playing = false; sc[w]++; upd(); beep(660, .25); later(() => beep(880, .35), 180);
+      showOv(c, `<h2>فاز ${w === "b" ? "🔵 الأزرق" : "🔴 الأحمر"}! 🏆</h2>
+        <p style="font-size:30px">🔴 ${sc.r} - ${sc.b} 🔵</p>
+        <button class="btn" id="again">جولة جديدة</button>
+        <button class="btn gray" id="rst">تصفير النتيجة</button>`);
+      c.querySelector("#again").onclick = start;
+      c.querySelector("#rst").onclick = () => { sc = { r: 0, b: 0 }; start(); };
+    };
+    const start = () => {
+      pos = 50; draw(); upd(); let n = 3;
+      showOv(c, `<div style="font-size:110px;font-weight:900" id="cn">3</div>`); beep(440, .12);
+      const t = every(() => {
+        n--;
+        if (n > 0) { c.querySelector("#cn").textContent = n; beep(440, .12); }
+        else { clearInterval(t); c.querySelector("#cn").textContent = "يلا!"; beep(880, .25);
+               later(() => { hideOv(c); playing = true; }, 350); }
+      }, 800);
+    };
+    draw(); upd(); hud.style.display = "none";
+    showOv(c, `<h2>🪢 شد الحبل</h2><p>كل لاعب يدق على لونه بسرعة. اللي يستحوذ على الشاشة كلها يفوز!</p>
+      <button class="btn" id="go">ابدأ</button>`);
+    c.querySelector("#go").onclick = () => { hud.style.display = "block"; start(); };
+  }
+};
+
+/* ---- 2) إكس أو ---- */
+games.xo = {
+  name: "إكس أو", icon: "❌", tag: "لاعبين", desc: "الكلاسيكية! رتّب ثلاث علامات في خط.",
+  init(c) {
+    c.innerHTML = `<div class="center"><div class="bar"><span id="st"></span></div>
+      <div class="xo" id="bd"></div>
+      <div class="bar" style="font-size:18px;opacity:.85"><span id="sc"></span></div>
+      <button class="btn gray" id="nw">لعبة جديدة</button></div>`;
+    const bd = c.querySelector("#bd"), st = c.querySelector("#st"), sc = c.querySelector("#sc");
+    const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    let b, turn, over, score = { X: 0, O: 0, D: 0 };
+    const cells = [];
+    for (let i = 0; i < 9; i++) {
+      const el = document.createElement("button"); el.onclick = () => play(i);
+      bd.appendChild(el); cells.push(el);
+    }
+    const label = p => p === "X" ? "❌" : "⭕";
+    const upd = () => sc.textContent = `❌ ${score.X}   ·   تعادل ${score.D}   ·   ⭕ ${score.O}`;
+    function reset() {
+      b = Array(9).fill(""); turn = "X"; over = false;
+      cells.forEach(e => { e.textContent = ""; e.classList.remove("win"); });
+      st.textContent = "دور " + label(turn); upd();
+    }
+    function play(i) {
+      if (over || b[i]) return;
+      b[i] = turn; cells[i].textContent = label(turn); beep(turn === "X" ? 520 : 400, .08); buzz(8);
+      const w = lines.find(l => l.every(k => b[k] === turn));
+      if (w) { over = true; w.forEach(k => cells[k].classList.add("win")); score[turn]++;
+               st.textContent = "فاز " + label(turn) + " 🏆"; upd(); beep(880, .3); return; }
+      if (b.every(Boolean)) { over = true; score.D++; st.textContent = "تعادل 🤝"; upd(); return; }
+      turn = turn === "X" ? "O" : "X"; st.textContent = "دور " + label(turn);
+    }
+    c.querySelector("#nw").onclick = reset; reset();
+  }
+};
+
+/* ---- 3) الذاكرة ---- */
+games.memory = {
+  name: "الذاكرة", icon: "🧠", tag: "لاعب واحد", desc: "اقلب البطاقات ودوّر على الأزواج المتشابهة.",
+  init(c) {
+    c.innerHTML = `<div class="center"><div class="bar"><span id="mv">الحركات: 0</span><span id="bs"></span></div>
+      <div class="mem" id="mb"></div><button class="btn gray" id="nw">من جديد</button></div>`;
+    const mb = c.querySelector("#mb"), mv = c.querySelector("#mv"), bs = c.querySelector("#bs");
+    const icons = ["🐪","🌴","☕","⚽","🚗","🦅"];
+    let first = null, lock = false, moves = 0, found = 0;
+    const showBest = () => { const b = store.get("mem_best", 0); bs.textContent = b ? "أفضل: " + b : ""; };
+    function build() {
+      mb.innerHTML = ""; first = null; lock = false; moves = 0; found = 0; mv.textContent = "الحركات: 0"; showBest();
+      shuffle([...icons, ...icons]).forEach(ic => {
+        const el = document.createElement("button"); el.textContent = "❓"; el.dataset.i = ic;
+        el.onclick = () => flip(el); mb.appendChild(el);
+      });
+    }
+    function flip(el) {
+      if (lock || el.classList.contains("up") || el.classList.contains("ok")) return;
+      el.classList.add("up"); el.textContent = el.dataset.i; beep(500, .06);
+      if (!first) { first = el; return; }
+      moves++; mv.textContent = "الحركات: " + moves;
+      if (first.dataset.i === el.dataset.i) {
+        first.className = el.className = "ok"; first = null; found++; beep(780, .15);
+        if (found === icons.length) {
+          const b = store.get("mem_best", 0);
+          if (!b || moves < b) store.set("mem_best", moves); reportScore(moves);
+          later(() => showOv(c, `<h2>برافو! 🎉</h2><p>خلصتها في ${moves} حركة</p>
+            <button class="btn" id="a">العب مرة ثانية</button>`), 400);
+          later(() => { const a = c.querySelector("#a"); if (a) a.onclick = () => { hideOv(c); build(); }; }, 450);
+        }
+      } else {
+        lock = true; const a = first; first = null;
+        later(() => { [a, el].forEach(x => { x.classList.remove("up"); x.textContent = "❓"; }); lock = false; }, 750);
+      }
+    }
+    c.querySelector("#nw").onclick = build; build();
+  }
+};
+
+/* ---- 4) الثعبان ---- */
+games.snake = {
+  name: "الثعبان", icon: "🐍", tag: "لاعب واحد", desc: "كُل وكبّر، لا تصدم الجدار ولا نفسك. اسحب بإصبعك!",
+  init(c) {
+    c.style.touchAction = "none";
+    c.innerHTML = `<div class="center"><div class="bar"><span id="sc">النقاط: 0</span><span id="bs"></span></div>
+      <canvas id="cv"></canvas>
+      <div class="pad"><span></span><button data-d="u">⬆</button><span></span>
+        <button data-d="l">⬅</button><button data-d="d">⬇</button><button data-d="r">➡</button></div></div>`;
+    const cv = c.querySelector("#cv"), ctx = cv.getContext("2d"), scEl = c.querySelector("#sc"), bsEl = c.querySelector("#bs");
+    const N = 18;
+    const avail = Math.min(c.clientWidth - 24, c.clientHeight - 190, 520);
+    const cell = Math.max(14, Math.floor(avail / N)); cv.width = cv.height = cell * N;
+    const V = { u: [0,-1], d: [0,1], l: [-1,0], r: [1,0] };
+    let snake, dir, queue, food, score, alive;
+    const showBest = () => bsEl.textContent = "أفضل: " + store.get("snake_best", 0);
+    function reset() {
+      snake = [[9,9],[8,9],[7,9]]; dir = "r"; queue = []; score = 0; alive = true;
+      scEl.textContent = "النقاط: 0"; showBest(); placeFood(); draw();
+    }
+    function placeFood() {
+      do { food = [Math.random() * N | 0, Math.random() * N | 0]; }
+      while (snake.some(s => s[0] === food[0] && s[1] === food[1]));
+    }
+    function turn(d) {
+      const last = queue.length ? queue[queue.length - 1] : dir;
+      if (V[d][0] + V[last][0] === 0 && V[d][1] + V[last][1] === 0) return; // منع الرجوع للخلف
+      if (d !== last && queue.length < 3) queue.push(d);
+    }
+    function step() {
+      if (!alive) return;
+      if (queue.length) dir = queue.shift();
+      const h = [snake[0][0] + V[dir][0], snake[0][1] + V[dir][1]];
+      if (h[0] < 0 || h[1] < 0 || h[0] >= N || h[1] >= N || snake.some(s => s[0] === h[0] && s[1] === h[1])) return die();
+      snake.unshift(h);
+      if (h[0] === food[0] && h[1] === food[1]) {
+        score++; scEl.textContent = "النقاط: " + score; beep(700, .08); buzz(10); placeFood();
+      } else snake.pop();
+      draw();
+    }
+    function die() {
+      alive = false; beep(200, .4); buzz(60);
+      const b = store.get("snake_best", 0); if (score > b) store.set("snake_best", score); showBest(); reportScore(score);
+      showOv(c, `<h2>انتهت 💥</h2><p style="font-size:28px">النقاط: ${score}</p>
+        <button class="btn" id="a">العب مرة ثانية</button>`);
+      c.querySelector("#a").onclick = () => { hideOv(c); reset(); };
+    }
+    function draw() {
+      ctx.fillStyle = "#1e293b"; ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.fillStyle = "#ef4444"; ctx.beginPath();
+      ctx.arc(food[0] * cell + cell / 2, food[1] * cell + cell / 2, cell * .38, 0, 7); ctx.fill();
+      snake.forEach((s, i) => {
+        ctx.fillStyle = i === 0 ? "#4ade80" : "#22c55e";
+        ctx.fillRect(s[0] * cell + 1, s[1] * cell + 1, cell - 2, cell - 2);
+      });
+    }
+    c.querySelectorAll(".pad button").forEach(b => b.onpointerdown = e => { e.preventDefault(); turn(b.dataset.d); });
+    onDoc("keydown", e => {
+      const m = { ArrowUp: "u", ArrowDown: "d", ArrowLeft: "l", ArrowRight: "r" }[e.key]; if (m) { e.preventDefault(); turn(m); }
+    });
+    let sx, sy;
+    c.addEventListener("pointerdown", e => { sx = e.clientX; sy = e.clientY; });
+    c.addEventListener("pointerup", e => {
+      if (sx == null) return; const dx = e.clientX - sx, dy = e.clientY - sy; sx = null;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+      turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "r" : "l") : (dy > 0 ? "d" : "u"));
+    });
+    every(step, 125); reset();
+    showOv(c, `<h2>🐍 الثعبان</h2><p>اسحب بإصبعك على الشاشة (أو استخدم الأسهم) لتغيير الاتجاه.</p>
+      <button class="btn" id="go">ابدأ</button>`);
+    alive = false;
+    c.querySelector("#go").onclick = () => { hideOv(c); reset(); };
+  }
+};
+
+/* ---- 5) اصطياد ---- */
+games.catch = {
+  name: "اصطياد النجوم", icon: "⭐", tag: "لاعب واحد", desc: "30 ثانية: اصطد أكبر عدد من النجوم قبل ما تختفي.",
+  init(c) {
+    c.innerHTML = `<div class="center" style="justify-content:flex-start"><div class="bar"><span id="tm">⏱ 30</span><span id="sc">⭐ 0</span><span id="bs"></span></div>
+      <div id="arena"></div></div>`;
+    const ar = c.querySelector("#arena"), tm = c.querySelector("#tm"), sc = c.querySelector("#sc"), bs = c.querySelector("#bs");
+    let score = 0, left = 30, running = false, tgt = null, tgtTimer = null;
+    const best = () => store.get("catch_best", 0);
+    bs.textContent = "أفضل: " + best();
+    function spawn() {
+      if (!running) return;
+      if (tgt) tgt.remove();
+      const t = document.createElement("div"); t.className = "target"; t.textContent = "⭐";
+      t.style.left = Math.random() * (ar.clientWidth - 80) + "px";
+      t.style.top = Math.random() * (ar.clientHeight - 80) + "px";
+      t.onpointerdown = e => { e.preventDefault(); score++; sc.textContent = "⭐ " + score; beep(800, .06); buzz(8); clearTimeout(tgtTimer); spawn(); };
+      ar.appendChild(t); tgt = t;
+      clearTimeout(tgtTimer); tgtTimer = later(spawn, 1000);
+    }
+    function start() {
+      hideOv(c); score = 0; left = 30; running = true; sc.textContent = "⭐ 0"; tm.textContent = "⏱ 30"; spawn();
+      const t = every(() => {
+        left--; tm.textContent = "⏱ " + left;
+        if (left <= 0) { clearInterval(t); finish(); }
+      }, 1000);
+    }
+    function finish() {
+      running = false; clearTimeout(tgtTimer); if (tgt) tgt.remove(); beep(500, .3);
+      const nb = score > best(); if (nb) store.set("catch_best", score); bs.textContent = "أفضل: " + best(); reportScore(score);
+      showOv(c, `<h2>انتهى الوقت! ⏰</h2><p style="font-size:30px">⭐ ${score}</p>${nb ? "<p>🔥 رقم قياسي جديد!</p>" : ""}
+        <button class="btn" id="a">العب مرة ثانية</button>`);
+      c.querySelector("#a").onclick = start;
+    }
+    showOv(c, `<h2>⭐ اصطياد النجوم</h2><p>اضغط على النجمة قبل ما تختفي. عندك 30 ثانية!</p><button class="btn" id="go">ابدأ</button>`);
+    c.querySelector("#go").onclick = start;
+  }
+};
+
+/* ---- 6) مين أسرع ---- */
+games.react = {
+  name: "مين أسرع؟", icon: "⚡", tag: "لاعبين", desc: "انتظر الإشارة الخضراء، ومن يدق أول يفوز. لا تستعجل!",
+  init(c) {
+    c.innerHTML = `<div class="split">
+      <div class="zone" id="z1" style="flex:1;background:#475569"><div class="rot"><div class="big" id="t1"></div></div></div>
+      <div class="zone" id="z2" style="flex:1;background:#475569"><div><div class="big" id="t2"></div></div></div></div>
+      <div class="hud" id="hud"></div>`;
+    const z = { r: c.querySelector("#z1"), b: c.querySelector("#z2") };
+    const t = { r: c.querySelector("#t1"), b: c.querySelector("#t2") };
+    const hud = c.querySelector("#hud");
+    let state = "idle", goAt = 0, sc = { r: 0, b: 0 }, wait = null;
+    const upd = () => hud.textContent = "🔴 " + sc.r + " - " + sc.b + " 🔵";
+    const paint = (col, txt) => { ["r", "b"].forEach(k => { z[k].style.background = col; t[k].textContent = txt; }); };
+    function round() {
+      hideOv(c); state = "wait"; paint("#475569", "استعدوا...");
+      wait = later(() => { state = "go"; goAt = performance.now(); paint("#16a34a", "دق! 👆"); beep(880, .2); }, 2000 + Math.random() * 3000);
+    }
+    function result(win, msg) {
+      state = "idle"; clearTimeout(wait); sc[win]++; upd();
+      showOv(c, `<h2>${win === "b" ? "🔵 الأزرق" : "🔴 الأحمر"} يفوز!</h2><p>${msg}</p>
+        <p style="font-size:28px">🔴 ${sc.r} - ${sc.b} 🔵</p>
+        <button class="btn" id="a">جولة جديدة</button><button class="btn gray" id="rs">تصفير النتيجة</button>`);
+      c.querySelector("#a").onclick = round;
+      c.querySelector("#rs").onclick = () => { sc = { r: 0, b: 0 }; upd(); round(); };
+    }
+    ["r", "b"].forEach(k => z[k].addEventListener("pointerdown", e => {
+      e.preventDefault(); const other = k === "r" ? "b" : "r";
+      if (state === "wait") { beep(180, .4); result(other, "الثاني استعجل قبل الإشارة 😅"); }
+      else if (state === "go") { beep(660, .2); result(k, "سرعته " + Math.round(performance.now() - goAt) + " ملي ثانية ⚡"); }
+    }));
+    upd(); hud.style.display = "none"; paint("#475569", "");
+    showOv(c, `<h2>⚡ مين أسرع؟</h2><p>تنتظرون لين الشاشة تصير <b style="color:#4ade80">خضراء</b> ثم يدق كل واحد على نصفه. اللي يدق قبل الإشارة يخسر!</p>
+      <button class="btn" id="go">ابدأ</button>`);
+    c.querySelector("#go").onclick = () => { hud.style.display = "block"; round(); };
+  }
+};
+
+/* ============ أدوات ألعاب الحفلات ============ */
+const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+const pickRand = a => a[Math.random() * a.length | 0];
+function mkScr(c) {
+  c.innerHTML = '<div class="scr"><div class="in" id="mi"></div></div>';
+  const box = c.querySelector("#mi"), sc = c.querySelector(".scr");
+  return { box, show: h => { box.innerHTML = h; sc.scrollTop = 0; } };
+}
+
+/* ---- مافيا ---- */
+const MROLE = {
+  mafia:   ["🔪", "مافيا",  "تقتل لاعب كل ليلة مع شركائك. لا تنكشف!"],
+  doctor:  ["💉", "طبيب",   "كل ليلة تحمي لاعب من القتل (تقدر تحمي نفسك)."],
+  cop:     ["🕵️", "محقق",   "كل ليلة تكشف إذا لاعب معين مافيا أو لا."],
+  citizen: ["🙂", "مواطن",  "ناقش وصوّت عشان تكتشف المافيا."]
+};
+games.mafia = {
+  name: "مافيا", icon: "🕵️", tag: "4 - 12 لاعب", desc: "الجهاز يدير اللعبة: ليل ونهار وأدوار سرية. مرّروا الجهاز بينكم!",
+  init(c) {
+    const { box, show } = mkScr(c);
+    let P = [], night, order, idx = 0;
+    const alive = () => P.filter(p => p.alive);
+    const q = s => box.querySelector(s);
+
+    function setup(n, names) {
+      n = n || 6; names = names || [];
+      show(`<h2>🕵️ مافيا</h2><p>عدد اللاعبين</p>
+        <div class="step"><button id="mn">−</button><span>${n}</span><button id="pl">+</button></div>
+        <p style="font-size:15px;opacity:.7">مافيا: ${Math.max(1, n >> 2)} · طبيب · ${n >= 5 ? "محقق · " : ""}والباقي مواطنين</p>
+        <div class="names" id="nm">${Array.from({ length: n }, (_, i) =>
+          `<input placeholder="لاعب ${i + 1}" value="${esc(names[i] || "")}">`).join("")}</div>
+        <button class="btn" id="go">وزّع الأدوار</button>`);
+      const read = () => [...box.querySelectorAll("#nm input")].map(i => i.value.trim());
+      q("#mn").onclick = () => setup(Math.max(4, n - 1), read());
+      q("#pl").onclick = () => setup(Math.min(12, n + 1), read());
+      q("#go").onclick = () => deal(n, read());
+    }
+
+    function deal(n, names) {
+      const roles = Array(Math.max(1, n >> 2)).fill("mafia"); roles.push("doctor");
+      if (n >= 5) roles.push("cop");
+      while (roles.length < n) roles.push("citizen");
+      shuffle(roles);
+      P = Array.from({ length: n }, (_, i) => ({ name: names[i] || ("لاعب " + (i + 1)), role: roles[i], alive: true }));
+      idx = 0; reveal();
+    }
+
+    function reveal() {
+      if (idx >= P.length) { startNight(); return; }
+      const p = P[idx];
+      show(`<h2>📱 مرّر الجهاز لـ</h2><div class="big">${esc(p.name)}</div><p>لا أحد يشوف الشاشة غيره!</p>
+        <button class="btn" id="s">أنا ${esc(p.name)}، اعرض دوري</button>`);
+      q("#s").onclick = () => {
+        const r = MROLE[p.role]; let extra = "";
+        if (p.role === "mafia") {
+          const m = P.filter(x => x.role === "mafia" && x !== p).map(x => esc(x.name));
+          extra = m.length ? `<p>شركاؤك: <b>${m.join("، ")}</b></p>` : "<p>أنت المافيا الوحيد</p>";
+        }
+        show(`<div style="font-size:90px">${r[0]}</div><h2>أنت: ${r[1]}</h2>${extra}<p>${r[2]}</p>
+          <button class="btn" id="h">فهمت، إخفاء</button>`);
+        q("#h").onclick = () => { idx++; reveal(); };
+      };
+    }
+
+    function startNight() { night = { kills: [], save: null }; order = alive(); idx = 0; nightTurn(); }
+
+    function nightTurn() {
+      if (idx >= order.length) return dawn();
+      const p = order[idx];
+      show(`<h2>🌙 الليل</h2><p>مرّر الجهاز لـ</p><div class="big">${esc(p.name)}</div>
+        <button class="btn" id="s">أنا ${esc(p.name)}</button>`);
+      q("#s").onclick = () => action(p);
+    }
+
+    function pick(title, list, cb, note) {
+      show(`<h2>${title}</h2>${note ? `<p>${note}</p>` : ""}<div class="pgrid">${list.map((x, i) =>
+        `<button class="pb" data-i="${i}">${esc(x.name)}</button>`).join("")}</div>`);
+      box.querySelectorAll(".pb").forEach(b => b.onclick = () => cb(list[+b.dataset.i]));
+    }
+
+    function done(html) {
+      show(html + `<button class="btn" id="n">إخفاء ومرّر للتالي</button>`);
+      q("#n").onclick = () => { idx++; nightTurn(); };
+    }
+
+    function action(p) {
+      const others = alive().filter(x => x !== p);
+      if (p.role === "mafia")
+        pick("🔪 من تبي تقتل؟", alive().filter(x => x.role !== "mafia"), t => { night.kills.push(t); done("<h2>تم ✅</h2>"); });
+      else if (p.role === "doctor")
+        pick("💉 من تبي تحمي؟", alive(), t => { night.save = t; done("<h2>تم ✅</h2>"); });
+      else if (p.role === "cop")
+        pick("🕵️ من تبي تفحص؟", others, t =>
+          done(`<h2>${esc(t.name)}</h2><div style="font-size:60px">${t.role === "mafia" ? "🔴" : "🟢"}</div>
+            <h2>${t.role === "mafia" ? "مافيا!" : "مو مافيا"}</h2>`));
+      else
+        pick("🙂 أنت مواطن", others, () => done("<h2>تم ✅</h2>"),
+          "اختر أي لاعب (ما يأثر على شي، بس عشان ما أحد يعرف دورك)");
+    }
+
+    function winner() {
+      const m = alive().filter(p => p.role === "mafia").length, o = alive().length - m;
+      return m === 0 ? "citizens" : (m >= o ? "mafia" : null);
+    }
+
+    function dawn() {
+      let victim = null;
+      if (night.kills.length) {
+        const cnt = new Map(); night.kills.forEach(t => cnt.set(t, (cnt.get(t) || 0) + 1));
+        const mx = Math.max(...cnt.values());
+        victim = shuffle([...cnt].filter(e => e[1] === mx))[0][0];
+      }
+      let msg;
+      if (victim && victim !== night.save) {
+        victim.alive = false; buzz(120);
+        msg = `<div style="font-size:70px">💀</div><h2>انقتل ${esc(victim.name)}</h2><p>دوره: ${MROLE[victim.role][1]} ${MROLE[victim.role][0]}</p>`;
+      } else msg = `<div style="font-size:70px">🌅</div><h2>مرّت الليلة بسلام</h2><p>ما أحد مات!</p>`;
+      const w = winner();
+      show(`<h2>☀️ الصبح</h2>${msg}<button class="btn" id="n">${w ? "النتيجة" : "ابدأ النقاش"}</button>`);
+      q("#n").onclick = () => w ? end(w) : vote();
+    }
+
+    function vote() {
+      const al = alive();
+      show(`<h2>🗣️ النقاش والتصويت</h2><p>الأحياء: ${al.length}. ناقشوا مين المافيا، وإذا اتفقتوا اضغطوا على اسمه:</p>
+        <div class="pgrid">${al.map((x, i) => `<button class="pb" data-i="${i}">${esc(x.name)}</button>`).join("")}</div>
+        <button class="btn gray" id="sk">ما اتفقنا — كملوا الليل</button>`);
+      box.querySelectorAll(".pb").forEach(b => b.onclick = () => confirmOut(al[+b.dataset.i]));
+      q("#sk").onclick = startNight;
+    }
+
+    function confirmOut(p) {
+      show(`<h2>إخراج ${esc(p.name)}؟</h2><button class="btn" id="y">تأكيد</button><button class="btn gray" id="no">رجوع</button>`);
+      q("#no").onclick = vote;
+      q("#y").onclick = () => {
+        p.alive = false; const r = MROLE[p.role], w = winner();
+        show(`<div style="font-size:80px">${r[0]}</div><h2>${esc(p.name)} كان ${r[1]}</h2>
+          <button class="btn" id="n">${w ? "النتيجة" : "ابدأ الليل"}</button>`);
+        q("#n").onclick = () => w ? end(w) : startNight();
+      };
+    }
+
+    function end(w) {
+      beep(880, .3);
+      show(`<div style="font-size:80px">${w === "mafia" ? "🔪" : "🎉"}</div>
+        <h2>${w === "mafia" ? "فازت المافيا!" : "فاز المواطنين!"}</h2>
+        <div style="width:100%">${P.map(p => `<p style="margin:2px 0">${MROLE[p.role][0]} ${esc(p.name)} — ${MROLE[p.role][1]}${p.alive ? "" : " 💀"}</p>`).join("")}</div>
+        <button class="btn" id="a">لعبة جديدة</button>`);
+      q("#a").onclick = () => setup(P.length, P.map(p => p.name));
+    }
+    setup();
+  }
+};
+
+/* ---- برا السالفة ---- */
+games.outsider = {
+  name: "برا السالفة", icon: "🤫", tag: "3 - 12 لاعب", desc: "الكل يعرف الكلمة إلا واحد! اكتشفوه من كلامه.",
+  init(c) {
+    const { box, show } = mkScr(c);
+    const q = s => box.querySelector(s);
+    const CATS = {
+      "🍽️ أكلات": ["كبسة","شاورما","بيتزا","مندي","برجر","سوشي","فلافل","مطبق","سمبوسة","مفطح"],
+      "📍 أماكن": ["مطار","مستشفى","مدرسة","ملعب","سوق","شاطئ","مطعم","مسجد","حديقة","سينما"],
+      "🐾 حيوانات": ["جمل","أسد","صقر","حصان","قطة","فيل","دولفين","ثعلب","دب","ببغاء"],
+      "👨‍⚕️ مهن": ["طبيب","معلم","طيار","طباخ","شرطي","مهندس","مزارع","نجار","ممرض","محامي"],
+      "🌍 دول": ["مصر","اليابان","تركيا","البرازيل","فرنسا","الهند","إيطاليا","المغرب","كندا","الأردن"],
+      "🏙️ مدن": ["الرياض","جدة","مكة","المدينة","الدمام","أبها","تبوك","حائل","الطائف","جازان"],
+      "📦 أشياء": ["جوال","سيارة","ساعة","نظارة","مفتاح","كرسي","ثلاجة","مروحة","كاميرا","قلم"]
+    };
+    let n = 5, cat = "";
+
+    function setup() {
+      show(`<h2>🤫 برا السالفة</h2><p>عدد اللاعبين</p>
+        <div class="step"><button id="mn">−</button><span>${n}</span><button id="pl">+</button></div>
+        <p>القسم</p><div class="pgrid" id="cg">
+          <button class="pb ${cat ? "" : "sel"}" data-c="">🎲 عشوائي</button>
+          ${Object.keys(CATS).map(k => `<button class="pb ${cat === k ? "sel" : ""}" data-c="${k}">${k}</button>`).join("")}
+        </div><button class="btn" id="go">ابدأ</button>`);
+      q("#mn").onclick = () => { n = Math.max(3, n - 1); setup(); };
+      q("#pl").onclick = () => { n = Math.min(12, n + 1); setup(); };
+      box.querySelectorAll("#cg .pb").forEach(b => b.onclick = () => {
+        cat = b.dataset.c; box.querySelectorAll("#cg .pb").forEach(x => x.classList.remove("sel")); b.classList.add("sel");
+      });
+      q("#go").onclick = deal;
+    }
+
+    let ck, word, out, i;
+    function deal() {
+      ck = cat || pickRand(Object.keys(CATS)); word = pickRand(CATS[ck]); out = Math.random() * n | 0; i = 0; pass();
+    }
+    function pass() {
+      if (i >= n) return talk();
+      show(`<h2>📱 مرّر الجهاز لـ</h2><div class="big">لاعب ${i + 1}</div><p>لا أحد يشوف الشاشة غيره!</p>
+        <button class="btn" id="s">اعرض</button>`);
+      q("#s").onclick = () => {
+        show(i === out
+          ? `<h2>🤫 أنت برا السالفة!</h2><p>القسم: ${ck}</p><p>ما تعرف الكلمة. تظاهر إنك تعرفها، وحاول تكتشفها من كلام غيرك!</p><button class="btn" id="h">إخفاء</button>`
+          : `<p>القسم: ${ck}</p><p>الكلمة السرية:</p><div class="card2">${word}</div><p>واحد منكم ما يعرفها!</p><button class="btn" id="h">إخفاء</button>`);
+        q("#h").onclick = () => { i++; pass(); };
+      };
+    }
+    function talk() {
+      let left = 240;
+      const fmt = s => (s / 60 | 0) + ":" + String(s % 60).padStart(2, "0");
+      show(`<h2>🗣️ النقاش</h2><p>يبدأ <b>لاعب ${(Math.random() * n | 0) + 1}</b>. كل واحد يعطي تلميح عن الكلمة بدون ما يكشفها، ويسأل غيره أسئلة!</p>
+        <div class="big" id="tm">${fmt(left)}</div><button class="btn" id="v">ابدأ التصويت</button>`);
+      const t = every(() => {
+        left--; const el = q("#tm"); if (el) el.textContent = fmt(Math.max(0, left));
+        if (left === 0) { clearInterval(t); beep(300, .5); buzz(200); }
+      }, 1000);
+      q("#v").onclick = () => { clearInterval(t); vote(); };
+    }
+    function vote() {
+      show(`<h2>🎯 مين برا السالفة؟</h2><p>اتفقوا واضغطوا على المشتبه فيه:</p>
+        <div class="pgrid">${Array.from({ length: n }, (_, k) => `<button class="pb" data-i="${k}">لاعب ${k + 1}</button>`).join("")}</div>`);
+      box.querySelectorAll(".pb").forEach(b => b.onclick = () => result(+b.dataset.i));
+    }
+    function result(k) {
+      if (k === out) {
+        show(`<h2>🎯 انكشف!</h2><p>لاعب ${out + 1} كان برا السالفة، بس عنده فرصة أخيرة: يخمّن الكلمة!</p>
+          <button class="btn" id="rv">اعرض الكلمة بعد ما يخمّن</button>`);
+        q("#rv").onclick = () => {
+          show(`<p>الكلمة كانت:</p><div class="card2">${word}</div><p>هل خمّنها صح؟</p>
+            <button class="btn" id="ok">خمّن صح 😎</button><button class="btn gray" id="no">غلط ✅</button>`);
+          q("#ok").onclick = () => fin("😎 فاز برا السالفة!");
+          q("#no").onclick = () => fin("🎉 فاز الباقين!");
+        };
+      } else {
+        show(`<h2>😈 ما انكشف!</h2><p>لاعب ${k + 1} بريء. برا السالفة هو <b>لاعب ${out + 1}</b>!</p>
+          <p>الكلمة كانت:</p><div class="card2">${word}</div><button class="btn" id="a">جولة جديدة</button>`);
+        q("#a").onclick = setup;
+      }
+    }
+    function fin(t) { show(`<h2>${t}</h2><button class="btn" id="a">جولة جديدة</button>`); q("#a").onclick = setup; beep(800, .25); }
+    setup();
+  }
+};
+
+/* ---- لو خيروك ---- */
+const WYR = [
+  ["تاكل كبسة كل يوم سنة", "تاكل برجر كل يوم سنة"],
+  ["تقدر تطير", "تصير غير مرئي"],
+  ["تسافر للماضي", "تسافر للمستقبل"],
+  ["تنام 12 ساعة كل يوم", "تنام 3 ساعات بس وتحس بنشاط"],
+  ["تعرف كل لغات العالم", "تعزف كل الآلات الموسيقية"],
+  ["تكون غني وما عندك أصدقاء", "تكون عادي وعندك أصدقاء كثير"],
+  ["تسكن جزيرة لحالك", "تسكن مدينة مزدحمة جداً"],
+  ["تشرب شاهي بس طول عمرك", "تشرب قهوة بس طول عمرك"],
+  ["ما تاكل حلويات أبداً", "ما تاكل مالح أبداً"],
+  ["تقرأ أفكار الناس", "تتحكم بالطقس"],
+  ["تضيع جوالك أسبوع", "تضيع محفظتك أسبوع"],
+  ["تلقى كنز مدفون", "تفوز بجائزة كبيرة"],
+  ["تتكلم مع الحيوانات", "تفهم أي لغة"],
+  ["تعيش بالصيف دايماً", "تعيش بالشتاء دايماً"],
+  ["ترجع طفل ليوم كامل", "تصير مليونير ليوم واحد"],
+  ["كل أكلك حار جداً", "كل أكلك بدون ملح"],
+  ["تقعد بالسيارة بزحمة ساعتين يومياً", "تمشي ساعة يومياً بالحر"],
+  ["تعيش بدون موسيقى", "تعيش بدون أفلام ومسلسلات"],
+  ["تكون أسرع واحد بالعالم", "تكون أذكى واحد بالعالم"],
+  ["تلعب ألعاب فيديو طول اليوم", "تسافر حول العالم"],
+  ["عندك قطة تتكلم", "عندك كلب يطير"],
+  ["تنسى كل شي كل صباح", "تتذكر كل شي حتى أتفه التفاصيل"],
+  ["تاكل بيتزا للأبد", "تاكل شاورما للأبد"],
+  ["رحلة بر مع الربع", "رحلة فاخرة لحالك"],
+  ["النت يفصل كل ساعة", "جوالك يفصل شحنه كل ساعتين"],
+  ["تحضر مباراة مهمة بالملعب", "تحضر حفلة لفنانك المفضل"],
+  ["تصحى الفجر كل يوم مبسوط", "تسهر للصبح كل يوم"],
+  ["تعيش بدون سيارة", "تعيش بدون مكيف"]
+];
+games.wyr = {
+  name: "لو خيروك", icon: "🤔", tag: "للجميع", desc: "اختيارات صعبة ومضحكة، وتشوفون مين اختار إيش!",
+  init(c) {
+    const { box, show } = mkScr(c);
+    let deck = shuffle(WYR.map((_, i) => i)), k = 0, cnt = [0, 0];
+    function render() {
+      if (k > 0 && k % deck.length === 0) deck = shuffle(deck);
+      const [a, b] = WYR[deck[k % deck.length]]; cnt = [0, 0];
+      show(`<p style="opacity:.7;margin:0">سؤال ${k + 1}</p><h2>لو خيروك…</h2>
+        <button class="opt a" id="oa">${a}<div class="pct" id="pa"></div></button>
+        <div style="font-size:22px;font-weight:800">أو</div>
+        <button class="opt b" id="ob">${b}<div class="pct" id="pb"></div></button>
+        <p style="font-size:15px;opacity:.7">كل لاعب يختار بدوره، والنتيجة تتحدّث</p>
+        <button class="btn gray" id="nx">السؤال التالي ←</button>`);
+      const upd = () => {
+        const t = cnt[0] + cnt[1];
+        box.querySelector("#pa").textContent = cnt[0] + " (" + Math.round(cnt[0] * 100 / t) + "%)";
+        box.querySelector("#pb").textContent = cnt[1] + " (" + Math.round(cnt[1] * 100 / t) + "%)";
+      };
+      box.querySelector("#oa").onclick = () => { cnt[0]++; upd(); buzz(8); beep(520, .06); };
+      box.querySelector("#ob").onclick = () => { cnt[1]++; upd(); buzz(8); beep(420, .06); };
+      box.querySelector("#nx").onclick = () => { k++; render(); };
+    }
+    render();
+  }
+};
+
+/* ---- صراحة وتحدي ---- */
+const TRUTH = [
+  "وش أكثر موقف محرج صار لك؟", "وش أكثر شي تخاف منه؟", "وش أغرب أكلة جربتها؟",
+  "لو تقدر تغيّر شي واحد فيك وش يكون؟", "وش آخر كذبة كذبتها؟", "منو أكثر واحد من الحاضرين تثق فيه؟",
+  "وش أسوأ هدية جاتك؟", "وش اللي تسويه لما تكون لحالك وما أحد يشوفك؟", "وش أغنية تسمعها بس ما تعترف؟",
+  "منو أكثر واحد من الحاضرين يضحكك؟", "وش حلمك اللي ما قلته لأحد؟", "وش أسوأ عادة عندك؟",
+  "لو عندك مليون ريال وش أول شي تسويه؟", "وش أكثر شي يعصّبك؟", "وش أول شي تلاحظه بالشخص لما تقابله؟",
+  "متى آخر مرة ضحكت لين دمعت عيونك؟", "وش اللقب اللي تبي الناس يسمونك فيه؟",
+  "وش التطبيق اللي ما تقدر تستغني عنه؟", "لو تسافر لأي دولة الحين وين تروح؟", "وش أكثر شي ندمت عليه؟"
+];
+const DARES = [
+  "قلّد صوت حيوان لين يعرفونه", "تكلم 30 ثانية بدون ما تقول كلمة \"أنا\"", "ارقص 10 ثواني",
+  "قلّد واحد من الحاضرين لين يعرفونه", "غنّ أي شي تبيه 10 ثواني", "اذكر 5 أسماء مدن بـ 10 ثواني",
+  "اقرأ أيام الأسبوع بالعكس بسرعة", "تكلم بلهجة غير لهجتك لمدة دقيقة", "سو أغرب وجه تقدر عليه وثبّته 5 ثواني",
+  "مثّل مشهد تمثيلي عن \"الانتظار بالطابور\"", "قل أطول كلمة تعرفها", "تكلم وأنت مغمض عيونك لمدة 20 ثانية",
+  "اعمل مدح مبالغ فيه لأي شخص تختاره", "قلّد مذيع نشرة أخبار وانت تقرأ ورقة فاضية"
+];
+games.truth = {
+  name: "صراحة وتحدي", icon: "🎭", tag: "للجميع", desc: "أسئلة جريئة وتحديات مضحكة، اختر صراحة أو تحدي!",
+  init(c) {
+    const { box, show } = mkScr(c);
+    const decks = { t: shuffle(TRUTH.slice()), d: shuffle(DARES.slice()) };
+    function home() {
+      show(`<h2>🎭 صراحة وتحدي</h2><p>الدور على مين؟ اختر:</p>
+        <button class="opt a" id="t">🗣️ صراحة</button><button class="opt b" id="d">🎬 تحدي</button>`);
+      box.querySelector("#t").onclick = () => card("t");
+      box.querySelector("#d").onclick = () => card("d");
+    }
+    function card(k) {
+      if (!decks[k].length) decks[k] = shuffle((k === "t" ? TRUTH : DARES).slice());
+      const text = decks[k].pop();
+      beep(600, .08);
+      show(`<p>${k === "t" ? "🗣️ صراحة" : "🎬 تحدي"}</p><div class="card2">${text}</div>
+        <button class="btn" id="n">تم ✅ — الدور التالي</button>
+        <button class="btn gray" id="o">سؤال ثاني من نفس النوع</button>`);
+      box.querySelector("#n").onclick = home;
+      box.querySelector("#o").onclick = () => card(k);
+    }
+    home();
+  }
+};
+
+/* ---- مين يبدأ؟ (الأصابع) ---- */
+games.fingers = {
+  name: "مين يبدأ؟", icon: "👆", tag: "للجميع", desc: "الكل يحط إصبعه على الشاشة، والجهاز يختار واحد عشوائي!",
+  init(c) {
+    c.innerHTML = `<div class="fa" id="fa"></div>
+      <div id="ft" style="position:absolute;top:18px;left:0;right:0;text-align:center;font-size:24px;font-weight:700;pointer-events:none;z-index:3">ضعوا أصابعكم على الشاشة 👇 (اثنين أو أكثر)</div>`;
+    const fa = c.querySelector("#fa"), ft = c.querySelector("#ft");
+    const colors = ["#ef4444","#3b82f6","#22c55e","#facc15","#a855f7","#f97316","#14b8a6","#ec4899","#84cc16","#06b6d4"];
+    const ptr = new Map(); let timer = null, locked = false, used = 0;
+    const place = (el, e) => { const r = fa.getBoundingClientRect(); el.style.left = (e.clientX - r.left) + "px"; el.style.top = (e.clientY - r.top) + "px"; };
+    function arm() {
+      clearInterval(timer);
+      if (locked) return;
+      if (ptr.size < 2) { ft.textContent = "ضعوا أصابعكم على الشاشة 👇 (اثنين أو أكثر)"; return; }
+      let n = 3; ft.textContent = "ثبّتوا... " + n; beep(440, .1);
+      timer = every(() => {
+        n--;
+        if (n > 0) { ft.textContent = "ثبّتوا... " + n; beep(440, .1); }
+        else { clearInterval(timer); choose(); }
+      }, 1000);
+    }
+    function choose() {
+      locked = true; const ids = [...ptr.keys()], win = pickRand(ids);
+      ptr.forEach((el, id) => {
+        if (id === win) el.style.transform = "translate(-50%,-50%) scale(1.9)"; else el.style.opacity = ".12";
+      });
+      ft.textContent = "🎉 الدور عليك!  (المس الشاشة لجولة جديدة)"; beep(900, .3); buzz(200);
+    }
+    function reset() { ptr.forEach(el => el.remove()); ptr.clear(); locked = false; used = 0; }
+    fa.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      if (locked) reset();
+      const el = document.createElement("div"); el.className = "fc";
+      el.style.background = colors[used++ % colors.length]; place(el, e);
+      fa.appendChild(el); ptr.set(e.pointerId, el); arm();
+    });
+    fa.addEventListener("pointermove", e => { const el = ptr.get(e.pointerId); if (el && !locked) place(el, e); });
+    const up = e => {
+      if (locked || !ptr.has(e.pointerId)) return;
+      ptr.get(e.pointerId).remove(); ptr.delete(e.pointerId); arm();
+    };
+    fa.addEventListener("pointerup", up); fa.addEventListener("pointercancel", up);
+  }
+};
+
+/* ---- الطائر ---- */
+games.flappy = {
+  name: "الطائر", icon: "🐦", tag: "لاعب واحد", desc: "اضغط عشان يطير وتفادى الأنابيب. كم تقدر تمر؟",
+  init(c) {
+    c.innerHTML = `<div class="center"><div class="bar"><span id="sc">0</span><span id="bs"></span></div><canvas id="cv" width="320" height="500"></canvas></div>`;
+    const cv = c.querySelector("#cv"), ctx = cv.getContext("2d"), sc = c.querySelector("#sc"), bs = c.querySelector("#bs");
+    const H = Math.max(300, Math.min(c.clientHeight - 80, 640));
+    cv.style.height = H + "px"; cv.style.width = (H * .64) + "px";
+    const BX = 80, R = 13;
+    let y, vy, pipes, frame, score, state;
+    const showBest = () => bs.textContent = "أفضل: " + store.get("flap_best", 0);
+    function reset() { y = 230; vy = 0; pipes = []; frame = 0; score = 0; state = "ready"; sc.textContent = "0"; showBest(); }
+    function flap() { if (state === "dead") return; state = "play"; vy = -7; beep(600, .04); }
+    function die() {
+      state = "dead"; beep(200, .4); buzz(60);
+      if (score > store.get("flap_best", 0)) store.set("flap_best", score); showBest(); reportScore(score);
+      later(() => {
+        showOv(c, `<h2>انتهت 💥</h2><p style="font-size:28px">النقاط: ${score}</p><button class="btn" id="a">العب مرة ثانية</button>`);
+        c.querySelector("#a").onclick = () => { hideOv(c); reset(); };
+      }, 350);
+    }
+    function step() {
+      if (state !== "play") return;
+      vy += .42; y += vy; frame++;
+      if (frame % 90 === 1) pipes.push({ x: 330, top: 60 + Math.random() * 245, gap: 135, passed: false });
+      pipes.forEach(p => p.x -= 2.6); pipes = pipes.filter(p => p.x > -60);
+      if (y < R || y > 500 - R) return die();
+      for (const p of pipes) {
+        if (BX + R > p.x && BX - R < p.x + 50 && (y - R < p.top || y + R > p.top + p.gap)) return die();
+        if (!p.passed && p.x + 50 < BX) { p.passed = true; score++; sc.textContent = score; beep(800, .05); }
+      }
+    }
+    function draw() {
+      ctx.fillStyle = "#38bdf8"; ctx.fillRect(0, 0, 320, 500);
+      ctx.fillStyle = "#16a34a";
+      pipes.forEach(p => { ctx.fillRect(p.x, 0, 50, p.top); ctx.fillRect(p.x, p.top + p.gap, 50, 500 - p.top - p.gap); });
+      ctx.font = "30px serif"; ctx.fillStyle = "#000"; ctx.fillText("🐦", BX - 16, y + 11);
+      if (state === "ready") { ctx.fillStyle = "#fff"; ctx.font = "bold 26px sans-serif"; ctx.textAlign = "center"; ctx.fillText("المس الشاشة للبدء", 160, 150); ctx.textAlign = "start"; }
+    }
+    c.addEventListener("pointerdown", e => { if (e.target.closest(".ov")) return; e.preventDefault(); flap(); });
+    onDoc("keydown", e => { if (e.code === "Space") { e.preventDefault(); flap(); } });
+    reset(); every(() => { step(); draw(); }, 16);
+  }
+};
+
+/* ---- ستروب (لون الخط) ---- */
+games.stroop = {
+  name: "تحدي الألوان", icon: "🎨", tag: "لاعب واحد", desc: "اضغط على لون الخط مو الكلمة! يلخبط مخك 😵",
+  init(c) {
+    c.innerHTML = `<div class="center"><div class="bar"><span id="tm">⏱ 30</span><span id="sc">0</span><span id="bs"></span></div>
+      <p style="margin:0;font-size:18px">اضغط على <b>لون الخط</b> مو الكلمة!</p>
+      <div id="w" style="font-size:84px;font-weight:900;min-height:120px;display:flex;align-items:center"></div>
+      <div class="sw" id="sw" style="max-width:420px"></div></div>`;
+    const COL = [["أحمر", "#ef4444"], ["أزرق", "#3b82f6"], ["أخضر", "#22c55e"], ["أصفر", "#facc15"]];
+    const w = c.querySelector("#w"), tm = c.querySelector("#tm"), sc = c.querySelector("#sc"), bs = c.querySelector("#bs"), sw = c.querySelector("#sw");
+    let score = 0, left = 30, running = false, cur = 0;
+    bs.textContent = "أفضل: " + store.get("stroop_best", 0);
+    COL.forEach((col, i) => {
+      const b = document.createElement("button"); b.style.background = col[1];
+      b.onpointerdown = e => {
+        e.preventDefault(); if (!running) return;
+        if (i === cur) { score++; beep(700, .05); } else { score = Math.max(0, score - 1); buzz(40); beep(200, .1); }
+        sc.textContent = score; next();
+      };
+      sw.appendChild(b);
+    });
+    function next() {
+      const a = Math.random() * 4 | 0; cur = Math.random() < .7 ? (a + 1 + (Math.random() * 3 | 0)) % 4 : a;
+      w.textContent = COL[a][0]; w.style.color = COL[cur][1];
+    }
+    function start() {
+      hideOv(c); score = 0; left = 30; running = true; sc.textContent = "0"; tm.textContent = "⏱ 30"; next();
+      const t = every(() => { left--; tm.textContent = "⏱ " + left; if (left <= 0) { clearInterval(t); finish(); } }, 1000);
+    }
+    function finish() {
+      running = false; beep(500, .3);
+      const nb = score > store.get("stroop_best", 0); if (nb) store.set("stroop_best", score); reportScore(score);
+      bs.textContent = "أفضل: " + store.get("stroop_best", 0);
+      showOv(c, `<h2>انتهى الوقت! ⏰</h2><p style="font-size:30px">${score} نقطة</p>${nb ? "<p>🔥 رقم قياسي جديد!</p>" : ""}<button class="btn" id="a">العب مرة ثانية</button>`);
+      c.querySelector("#a").onclick = start;
+    }
+    showOv(c, `<h2>🎨 تحدي الألوان</h2><p>تطلع كلمة لون مكتوبة بلون ثاني. اضغط على <b>لون الخط</b> الحقيقي. الغلط ينقص نقطة. عندك 30 ثانية!</p><button class="btn" id="go">ابدأ</button>`);
+    c.querySelector("#go").onclick = start;
+  }
+};
+
+/* ---- حجر ورقة مقص ---- */
+games.rps = {
+  name: "حجر ورقة مقص", icon: "✌️", tag: "ضد الجهاز", desc: "تحدّى الجهاز! مين أحسن حظاً؟",
+  init(c) {
+    const { box, show } = mkScr(c);
+    const CH = [["✊", "حجر"], ["✋", "ورقة"], ["✌️", "مقص"]];
+    let w = 0, l = 0, d = 0, last = "";
+    function render() {
+      show(`<h2>✌️ حجر ورقة مقص</h2><p style="font-size:22px">أنت ${w} · تعادل ${d} · الجهاز ${l}</p>
+        <div style="min-height:110px">${last}</div>
+        <p>اختر:</p><div class="rps">${CH.map((x, i) => `<button data-i="${i}">${x[0]}</button>`).join("")}</div>`);
+      box.querySelectorAll(".rps button").forEach(b => b.onclick = () => play(+b.dataset.i));
+    }
+    function play(me) {
+      const cp = Math.random() * 3 | 0; let res;
+      if (me === cp) { d++; res = "🤝 تعادل"; }
+      else if ((me + 2) % 3 === cp) { w++; res = "🎉 فزت!"; beep(800, .2); }
+      else { l++; res = "😅 خسرت!"; beep(250, .25); }
+      last = `<div style="font-size:48px">${CH[me][0]} ⚔️ ${CH[cp][0]}</div><div style="font-size:26px;font-weight:800">${res}</div>`;
+      buzz(15); render();
+    }
+    render();
+  }
+};
+
+const ORDER = ["mafia", "outsider", "wyr", "truth", "fingers", "tug", "xo", "react", "memory", "snake", "catch", "flappy", "stroop", "rps"];
+
+/* ============ وضع المنافسة ============ */
+const COMP_GAMES = [["snake", "🐍 الثعبان"], ["flappy", "🐦 الطائر"], ["catch", "⭐ اصطياد النجوم"], ["stroop", "🎨 تحدي الألوان"], ["memory", "🧠 الذاكرة"]];
+let comp = null;
+const compCfg = { gid: "snake", n: 3, rounds: 1, names: [] };
+
+function compOv(html) {
+  let o = document.getElementById("compov");
+  if (!o) {
+    o = document.createElement("div"); o.id = "compov"; o.className = "ov";
+    o.style.position = "fixed"; o.style.zIndex = "40"; o.style.padding = "0";
+    document.body.appendChild(o);
+  }
+  o.innerHTML = '<div class="scr" style="width:100%"><div class="in">' + html + '</div></div>';
+  o.style.display = "flex";
+  return o;
+}
+
+function compExit() {
+  comp = null;
+  const o = document.getElementById("compov"); if (o) o.style.display = "none";
+  cleanup(); content.innerHTML = ""; content.style.touchAction = "";
+  stage.style.display = "none"; menu.style.display = "block";
+}
+
+function compSetup() {
+  const o = compOv(`<h2>🏆 وضع المنافسة</h2>
+    <p>كل لاعب يلعب بدوره، والجهاز يجمع النتائج ويعلن الفائز</p>
+    <p>اللعبة</p>
+    <div class="pgrid" id="cg">${COMP_GAMES.map(g => `<button class="pb ${compCfg.gid === g[0] ? "sel" : ""}" data-g="${g[0]}">${g[1]}</button>`).join("")}</div>
+    <p>عدد اللاعبين</p>
+    <div class="step"><button id="pm">−</button><span>${compCfg.n}</span><button id="pp">+</button></div>
+    <div class="names" id="cn">${Array.from({ length: compCfg.n }, (_, i) =>
+      `<input placeholder="لاعب ${i + 1}" value="${esc(compCfg.names[i] || "")}">`).join("")}</div>
+    <p>عدد الجولات لكل لاعب</p>
+    <div class="step"><button id="rm">−</button><span>${compCfg.rounds}</span><button id="rp">+</button></div>
+    <button class="btn" id="go">ابدأ المنافسة</button>
+    <button class="btn gray" id="x">إغلاق</button>`);
+  const q = s => o.querySelector(s);
+  const readNames = () => { compCfg.names = [...o.querySelectorAll("#cn input")].map(i => i.value.trim()); };
+  o.querySelectorAll("#cg .pb").forEach(b => b.onclick = () => {
+    compCfg.gid = b.dataset.g; o.querySelectorAll("#cg .pb").forEach(x => x.classList.remove("sel")); b.classList.add("sel");
+  });
+  q("#pm").onclick = () => { readNames(); compCfg.n = Math.max(2, compCfg.n - 1); compSetup(); };
+  q("#pp").onclick = () => { readNames(); compCfg.n = Math.min(8, compCfg.n + 1); compSetup(); };
+  q("#rm").onclick = () => { readNames(); compCfg.rounds = Math.max(1, compCfg.rounds - 1); compSetup(); };
+  q("#rp").onclick = () => { readNames(); compCfg.rounds = Math.min(5, compCfg.rounds + 1); compSetup(); };
+  q("#x").onclick = () => { o.style.display = "none"; };
+  q("#go").onclick = () => { readNames(); compStart(); };
+}
+
+function compStart() {
+  const players = Array.from({ length: compCfg.n }, (_, i) => ({ name: compCfg.names[i] || ("لاعب " + (i + 1)), scores: [] }));
+  compCfg.names = players.map(p => p.name);
+  const turns = [];
+  for (let r = 0; r < compCfg.rounds; r++) for (let i = 0; i < players.length; i++) turns.push(i);
+  comp = { gid: compCfg.gid, players, turns, i: 0, waiting: true, lower: compCfg.gid === "memory" };
+  compNext();
+}
+
+function compNext() {
+  if (comp.i >= comp.turns.length) return compFinal();
+  const p = comp.players[comp.turns[comp.i]];
+  const r = Math.floor(comp.i / comp.players.length) + 1;
+  comp.waiting = true;
+  const o = compOv(`<p>الجولة ${r} من ${compCfg.rounds} · ${games[comp.gid].name}</p>
+    <h2>الدور على</h2><div class="big">${esc(p.name)}</div>
+    <button class="btn" id="go">جاهز ✅</button>
+    <button class="btn gray" id="x">إلغاء المنافسة</button>`);
+  o.querySelector("#go").onclick = () => { comp.waiting = false; o.style.display = "none"; openGame(comp.gid); };
+  o.querySelector("#x").onclick = compExit;
+}
+
+/* تستدعيها كل لعبة عند نهاية الدور */
+function reportScore(s) {
+  if (!comp || comp.waiting) return;
+  comp.waiting = true;
+  const mine = comp;
+  later(() => {
+    if (comp !== mine) return;
+    const p = comp.players[comp.turns[comp.i]];
+    p.scores.push(s);
+    const tot = p.scores.reduce((a, b) => a + b, 0), unit = comp.lower ? "حركة" : "نقطة";
+    const last = comp.i + 1 >= comp.turns.length;
+    const o = compOv(`<h2>${esc(p.name)}</h2><div class="big">${s} ${unit}</div>
+      ${p.scores.length > 1 ? `<p>المجموع: ${tot}</p>` : ""}
+      <button class="btn" id="n">${last ? "النتيجة النهائية 🏆" : "التالي ←"}</button>`);
+    o.querySelector("#n").onclick = () => { comp.i++; compNext(); };
+  }, 800);
+}
+
+function compFinal() {
+  const tot = p => p.scores.reduce((a, b) => a + b, 0);
+  const unit = comp.lower ? "حركة" : "نقطة";
+  const ranked = comp.players.slice().sort((a, b) => comp.lower ? tot(a) - tot(b) : tot(b) - tot(a));
+  const top = tot(ranked[0]), winners = ranked.filter(p => tot(p) === top);
+  const medals = ["🥇", "🥈", "🥉"];
+  beep(880, .3); later(() => beep(1100, .3), 200);
+  const o = compOv(`<div style="font-size:70px">🏆</div>
+    <h2>${winners.length > 1 ? "تعادل: " + winners.map(p => esc(p.name)).join(" و ") : "الفائز: " + esc(winners[0].name)}</h2>
+    <div style="width:100%">${ranked.map((p, i) => `<p style="font-size:22px;margin:4px 0">${medals[i] || "▫️"} ${esc(p.name)} — ${tot(p)} ${unit}</p>`).join("")}</div>
+    <button class="btn" id="a">منافسة جديدة</button>
+    <button class="btn gray" id="m">القائمة</button>`);
+  o.querySelector("#a").onclick = () => { comp = null; compSetup(); };
+  o.querySelector("#m").onclick = compExit;
+}
+
+/* ============ القائمة والتنقل ============ */
+const grid = document.getElementById("grid"), menu = document.getElementById("menu"),
+      stage = document.getElementById("stage"), content = document.getElementById("content"),
+      title = document.getElementById("title");
+
+(() => { const cc = document.createElement("div"); cc.className = "card wide";
+  cc.innerHTML = '<div class="ic">🏆</div><div class="nm">وضع المنافسة</div><div class="ds">كل لاعب يلعب بدوره والجهاز يعلن الفائز</div><span class="tg">2 - 8 لاعبين</span>';
+  cc.onclick = compSetup; grid.appendChild(cc); })();
+ORDER.forEach(id => { const g = games[id];
+  const d = document.createElement("div"); d.className = "card";
+  d.innerHTML = `<div class="ic">${g.icon}</div><div class="nm">${g.name}</div><div class="ds">${g.desc}</div><span class="tg">${g.tag}</span>`;
+  d.onclick = () => openGame(id); grid.appendChild(d);
+});
+
+function openGame(id) {
+  cleanup(); menu.style.display = "none"; stage.style.display = "flex";
+  title.textContent = games[id].icon + " " + games[id].name;
+  content.innerHTML = ""; content.style.touchAction = "";
+  games[id].init(content);
+}
+document.getElementById("backBtn").onclick = () => { comp = null; const co = document.getElementById("compov"); if (co) co.style.display = "none";
+  cleanup(); content.innerHTML = ""; content.style.touchAction = "";
+  stage.style.display = "none"; menu.style.display = "block";
+};
+</script>
+</body>
+</html>
